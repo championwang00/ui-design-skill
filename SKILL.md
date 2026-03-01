@@ -28,6 +28,7 @@ description: UI 设计工程完整指南。包含 Emil Kowalski 动画课程、H
 | 📢 营销页面 | `references/marketing-pages.md` | 滚动动画禁忌、CTA、文档站点 |
 | ⚡ 性能 | `references/performance.md` | transform/opacity、虚拟化、预加载 |
 | 🎯 HeroUI 规范 | `references/heroui-style.md` | 配色 Token、卡片、字体、间距 |
+| 🖼️ 配图资源 | `references/image-resources.md` | LobeHub Icons（品牌Logo）+ Unsplash（通用配图）|
 | ✅ 审查清单 | `references/review-checklist.md` | 10 项必查 + 常见错误 |
 
 ## 快速决策
