@@ -145,3 +145,75 @@ font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
 max-width: 960px;  /* 内容区 */
 margin: 0 auto;
 ```
+
+---
+
+## 配图资源
+
+### 模型/品牌 Logo — LobeHub Icons
+
+**CDN 地址：**
+```
+https://registry.npmmirror.com/@lobehub/icons-static-png/latest/files/{theme}/{name}.png
+```
+
+**主题目录：**
+- `light/` — 深色图标，用于**浅色/白色背景**
+- `dark/` — 浅色图标，用于**深色背景**
+
+**彩色版命名：** `{name}-color.png`（不是所有品牌都有彩色版）
+
+**常用图标：**
+
+| 品牌 | 彩色版 | 备注 |
+|------|--------|------|
+| Claude | `claude-color` | ✅ 有彩色 |
+| OpenAI | `openai` | ❌ 无彩色版，用原版 |
+| Gemini | `gemini-color` | ✅ 有彩色 |
+| DeepSeek | `deepseek-color` | ✅ 有彩色 |
+| Kimi/Moonshot | `kimi-color` | ✅ 有彩色 |
+| AWS Bedrock | `aws-color` | ✅ 有彩色 |
+
+**示例：**
+```html
+<!-- 白色背景上的 Claude 彩色 logo -->
+<img src="https://registry.npmmirror.com/@lobehub/icons-static-png/latest/files/light/claude-color.png" />
+```
+
+**图标样式建议：**
+```css
+.model-icon {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  object-fit: contain;
+  background: #fff;  /* 统一纯白底色 */
+  padding: 4px;
+}
+```
+
+**发现更多图标：** https://lobehub.com/icons
+
+### 通用配图 — Unsplash
+
+**API 格式：**
+```
+https://images.unsplash.com/{photo-id}?w={width}&h={height}&fit=crop&q=80
+```
+
+**推荐风格：** Minimalist / Abstract
+
+**使用方式：**
+- 每个卡片/条目配一张，不是页面顶部大图
+- 高度建议 120px（卡片）或 200px（Banner）
+- `object-fit: cover` + 与卡片相同的圆角
+- 使用 `loading="lazy"` 延迟加载
+
+**布局规则：**
+- 图片与卡片内容区无缝衔接（`overflow: hidden`）
+- 间距与卡片 padding 保持一致
+- 响应式：移动端图片高度可适当缩小
+
+**注意事项：**
+- 上线前验证所有图片 URL 返回 200（Unsplash 图片可能下架）
+- 为每个条目分配固定 photo-id（避免每次加载随机图片导致闪烁）
