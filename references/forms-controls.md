@@ -1,37 +1,261 @@
-# 表单与控件指南
+# Forms & Controls
 
-## 输入框
+Inputs, buttons, forms, and interactive controls.
 
-- 点击标签应聚焦输入（`for` 或包装）
-- 用正确的 `type`：email, password, tel, url, number, search
-- 禁用 `spellcheck` 和 `autocomplete`（大多数场景）
-- 禁用 1Password：`data-1p-ignore`
-- 输入装饰（图标）绝对定位在输入上，点击聚焦输入
-- **字体 ≥ 16px**（防止 iOS Safari 自动缩放）
-- 模态框中自动聚焦输入，但触摸设备不要（避免弹键盘）
+## Inputs
 
-## 表单
+### Labels
 
-- 用 `<form>` 包装，支持 Enter 提交
-- `Cmd+Enter`（Mac）/ `Ctrl+Enter`（Win）提交文本区域
-- 用登录用户数据预填充
+Clicking the input label should focus the input field. Always associate labels with inputs:
 
-## 按钮
+```html
+<label for="email">Email</label>
+<input id="email" type="email" />
 
-- 始终用 `<button>`，不要给 `<div>` 加 click
-- 提交后禁用防重复请求
-- 有快捷键时在按钮上显示
-- `:active` 加 `scale(0.97)` 增加按压感
+<!-- Or wrap the input -->
+<label>
+  Email
+  <input type="email" />
+</label>
+```
 
-## 复选框
+### Input Types
 
-- 标签和控件之间的空间也应可点击（无死区）
+Use appropriate `type` attributes:
 
-## 破坏性操作
+```html
+<input type="email" />
+<input type="password" />
+<input type="tel" />
+<input type="url" />
+<input type="number" />
+<input type="search" />
+```
 
-- 需要确认对话框
-- 用模态框而非 `confirm()`
+### Autocomplete and Spellcheck
 
-## 错误处理
+Disable `spellcheck` and `autocomplete` most of the time for cleaner UX:
 
-- 错误消息显示在出错的字段附近（并置原则）
+```html
+<input
+  type="text"
+  spellcheck="false"
+  autocomplete="off"
+/>
+```
+
+### 1Password Integration
+
+Disable 1Password autocomplete when not needed:
+
+```html
+<input data-lpignore="true" data-1p-ignore />
+```
+
+### Input Decorations
+
+Prefix and suffix decorations (icons, labels) should be:
+- Absolutely positioned on top of the text input with padding
+- Not placed next to the input as siblings
+- Should trigger focus on the input when clicked
+
+```css
+.input-wrapper {
+  position: relative;
+}
+
+.input-icon {
+  position: absolute;
+  left: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  pointer-events: none;
+}
+
+.input-field {
+  padding-left: 40px;
+}
+```
+
+For clickable icons (like clear button):
+
+```jsx
+<button
+  className="input-icon-button"
+  onClick={() => inputRef.current?.focus()}
+>
+  <SearchIcon />
+</button>
+```
+
+### Font Size (iOS)
+
+Ensure input font size is at least 16px to prevent zooming on iOS:
+
+```css
+input, textarea, select {
+  font-size: 16px;
+}
+```
+
+Inputs smaller than 16px cause iOS Safari to zoom in on focus.
+
+### Autofocus
+
+- Autofocus on inputs when a modal opens (if an input exists in the modal)
+- Do NOT autofocus inputs on touch devices—it opens the keyboard unexpectedly
+
+```jsx
+// Check for touch device before autofocus
+const isTouchDevice = 'ontouchstart' in window;
+
+<input autoFocus={!isTouchDevice} />
+```
+
+## Forms
+
+### Form Wrapper
+
+Inputs should be wrapped with a `<form>` to submit by pressing Enter:
+
+```html
+<form onSubmit={handleSubmit}>
+  <input type="text" />
+  <button type="submit">Submit</button>
+</form>
+```
+
+### Keyboard Submission
+
+Ensure `Cmd+Enter` (Mac) / `Ctrl+Enter` (Windows) submits the form, especially for textareas:
+
+```jsx
+function handleKeyDown(e) {
+  if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') {
+    handleSubmit();
+  }
+}
+```
+
+### Prefilling Forms
+
+- Use logged-in user's data to prefill forms when possible
+- When linking to a form, prefill content based on the request context
+
+Example: If a user clicks "Change username", prefill with:
+> "I'd like to change my username to:"
+
+If you can prefill any user data based on the logged-in user, do that.
+
+## Buttons
+
+### Semantic Elements
+
+A button should always be a `<button>`. Don't add click events on elements that aren't buttons:
+
+```html
+<!-- Good -->
+<button onClick={handleClick}>Click me</button>
+
+<!-- Bad -->
+<div onClick={handleClick}>Click me</div>
+<span onClick={handleClick}>Click me</span>
+```
+
+### Disabled After Submission
+
+Disable buttons after submission to avoid duplicate network requests:
+
+```jsx
+const [isSubmitting, setIsSubmitting] = useState(false);
+
+<button
+  disabled={isSubmitting}
+  onClick={async () => {
+    setIsSubmitting(true);
+    await submitForm();
+    setIsSubmitting(false);
+  }}
+>
+  {isSubmitting ? 'Submitting...' : 'Submit'}
+</button>
+```
+
+### Button Shortcuts
+
+If a button's action can also be performed with a keyboard shortcut, show that shortcut as a tooltip on the button:
+
+```jsx
+<Tooltip content="Save (Cmd+S)">
+  <button onClick={save}>Save</button>
+</Tooltip>
+```
+
+### Button Press Feel
+
+Add `transform: scale(0.97)` on `:active` to make buttons feel responsive:
+
+```css
+.button:active {
+  transform: scale(0.97);
+}
+```
+
+## Checkboxes and Controls
+
+### Dead Zones
+
+Avoid dead zones on checkboxes and controls. The space between label and control should also be clickable:
+
+```css
+.checkbox-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+}
+
+/* Make the entire row clickable, not just the checkbox */
+.checkbox-wrapper label {
+  cursor: pointer;
+  flex: 1;
+}
+```
+
+Or use a label that wraps everything:
+
+```html
+<label class="checkbox-row">
+  <input type="checkbox" />
+  <span>Remember me</span>
+</label>
+```
+
+## Destructive Actions
+
+Ensure destructive actions require confirmation:
+
+```jsx
+function handleDelete() {
+  if (confirm('Are you sure you want to delete this?')) {
+    deleteItem();
+  }
+}
+```
+
+For better UX, use a proper confirmation modal instead of `confirm()`.
+
+## Component Libraries
+
+Use Base UI for accessible component primitives. If it doesn't fit the codebase, use whatever else fits, but ensure accessibility is maintained.
+
+## Error Handling
+
+Colocate errors—show error messages close to the field that caused them:
+
+```jsx
+<div className="field">
+  <input type="email" aria-invalid={!!error} />
+  {error && <span className="error">{error}</span>}
+</div>
+```

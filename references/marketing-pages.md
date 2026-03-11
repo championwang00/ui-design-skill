@@ -1,37 +1,160 @@
-# 营销页面指南
+# Marketing Pages
 
-## 动画
+Guidelines specific to marketing sites, landing pages, blogs, docs, and changelogs.
 
-- **不要**加滚动动画（淡入、translate-Y）
-- **不要**断开连接的运动（滚动劫持、非 1:1 视差、自动轮播）
-- 介绍动画看过一次后禁用（用 `sessionStorage`）
+## Animations on Marketing Pages
 
-## 性能
+Marketing pages can use more elaborate animations than product UI, but still with restraint.
 
-- 预加载字体防布局偏移
-- 预加载首屏图像
-- 博客/变更日志/文档静态生成（构建时），不按需获取
+### What to Avoid
 
-## 导航
+**No scroll animations:** Don't add scroll animations like fade-ups, fade-ins, translate-Y on scroll.
 
-- 标题子菜单内容在 DOM 中可见（可访问性+SEO）
+**No disconnected motion:** Don't add animations or interactions that feel disconnected from user movement:
+- Scroll hijacking
+- Parallax that doesn't map 1:1 to scroll
+- Auto-advancing carousels
 
-## CTA 按钮
+### Intro Animations
 
-- 未登录：`"Get Started"` / `"Sign Up"`
-- 已登录：`"Go to Dashboard"` / `"Open App"`
+Disable intro animations if they've been seen during the current session:
 
-## 文档站点
+```jsx
+useEffect(() => {
+  const hasSeenIntro = sessionStorage.getItem('hasSeenIntro');
+  if (hasSeenIntro) {
+    setSkipIntro(true);
+  } else {
+    sessionStorage.setItem('hasSeenIntro', 'true');
+  }
+}, []);
+```
 
-- 代码片段有复制按钮
-- 页面可导出 Markdown（URL 加 `.md`）
-- 多视觉示例，不只是代码
+Use `sessionStorage` (not `localStorage`) so animations play again on new sessions.
 
-## 博客/变更日志
+## Performance
 
-- RSS：`/blog/rss.xml`、`/changelog/rss.xml`
-- 标题用 `text-wrap: balance`
+### Font Preloading
 
-## 插图
+Preload fonts to prevent layout shift:
 
-- `aria-label` + 禁用文本选择 + 禁用 `pointer-events`
+```jsx
+import { preload } from 'react-dom';
+
+// In your app initialization
+preload('/fonts/inter-var.woff2', { as: 'font', type: 'font/woff2' });
+```
+
+### Image Preloading
+
+Preload above-the-fold images:
+
+```html
+<link rel="preload" as="image" href="/hero-image.webp" />
+```
+
+### Static Generation
+
+Generate blog, changelog, docs, and all other frequently updated data at build time with revalidation. Do not fetch at request time:
+
+```jsx
+// Next.js example
+export async function generateStaticParams() {
+  const posts = await getPosts();
+  return posts.map((post) => ({ slug: post.slug }));
+}
+
+export const revalidate = 3600; // Revalidate every hour
+```
+
+## Header Navigation
+
+Ensure header submenu content on marketing pages is visible even when it shows on hover only. This maintains proper HTML structure for accessibility and SEO:
+
+```html
+<!-- Content exists in DOM, just visually hidden -->
+<nav>
+  <button aria-expanded="false">Products</button>
+  <div class="submenu" aria-hidden="true">
+    <!-- Full content here, not dynamically loaded -->
+  </div>
+</nav>
+```
+
+## Call-to-Action Buttons
+
+Ensure buttons have different CTAs based on whether a user is logged in:
+
+| State | CTA |
+| --- | --- |
+| Logged out | "Get Started" or "Sign Up" |
+| Logged in | "Go to Dashboard" or "Open App" |
+
+```jsx
+<Button href={isLoggedIn ? '/dashboard' : '/signup'}>
+  {isLoggedIn ? 'Go to Dashboard' : 'Get Started'}
+</Button>
+```
+
+## Documentation Sites
+
+### Code Snippets
+
+Provide a copy-to-clipboard button on all docs code snippets:
+
+```jsx
+<CodeBlock
+  code={snippet}
+  copyButton={true}
+/>
+```
+
+### Markdown Export
+
+Ensure all docs pages are copyable as markdown files:
+- Have a "Copy as Markdown" button
+- Support `.md` extension in URLs (e.g., `/docs/getting-started.md` returns markdown)
+
+### Visual Examples
+
+Ensure docs pages have many visual examples. Code alone isn't enough—show what the code produces.
+
+## Blog & Changelog
+
+### RSS Feed
+
+Ensure RSS feed exists for blog and changelog:
+
+```
+/blog/rss.xml
+/changelog/rss.xml
+```
+
+### Text Wrapping
+
+Use `text-wrap: balance` on headings:
+
+```css
+article h1, article h2 {
+  text-wrap: balance;
+}
+```
+
+## Illustrations
+
+Illustrations built in code should have:
+- Proper `aria-label` attribute for accessibility
+- Disabled text selection
+- Disabled pointer events (if decorative)
+
+```jsx
+<div
+  role="img"
+  aria-label="Illustration showing data flow"
+  className="illustration"
+  style={{
+    userSelect: 'none',
+    pointerEvents: 'none',
+  }}
+/>
+```

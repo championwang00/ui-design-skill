@@ -318,8 +318,22 @@ Is the element entering or exiting the viewport?
 ├── Yes → linear
 └── Default → ease-out
 
+## Theme Transitions
+
+**Important:** Switching themes should not trigger transitions and animations on elements. Disable transitions during theme changes to prevent flash of animated content.
+
+## AnimatePresence
+
+Use `popLayout` mode on AnimatePresence when an element has an exit animation and is in a group of elements.
+
+## Drag Gestures
+
+When implementing drag-to-dismiss or similar gestures, ensure velocity-based swiping works. Usually velocity (`swipeAmount / timeTaken`) higher than `0.10` should be sufficient to trigger the action.
+
+## Looping Animations
+
+Pause looping animations when off-screen to save resources.
+
 ## Reference Files
 
-- [PRACTICAL-TIPS.md](PRACTICAL-TIPS.md) - Detailed implementations for common animation scenarios
-
----
+- [practical-tips.md](practical-tips.md) - Detailed implementations for common animation scenarios

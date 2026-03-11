@@ -1,49 +1,222 @@
-# 性能优化指南
+# Performance
 
-## 动画性能
+Optimization, virtualization, and performance considerations.
 
-**只动画 `transform` 和 `opacity`。**
+## Animation Performance
 
-避免：padding/margin/height/width、blur > 20px、深层 CSS 变量
+See [web-animation-design.md](web-animation-design.md) for detailed animation performance guidelines. Key rules:
 
-```css
-.animated { will-change: transform; }
+- Only animate `transform` and `opacity`
+- Avoid animating `height`, `width`, `padding`, `margin`
+- Avoid `blur` filters above 20px
+- Use `will-change: transform` for GPU acceleration
+- Pause looping animations when off-screen
+
+## Lists & Virtualization
+
+Virtualize large lists. Don't render hundreds of DOM nodes when only a few are visible:
+
+```jsx
+import { useVirtualizer } from '@tanstack/react-virtual';
+
+function VirtualList({ items }) {
+  const parentRef = useRef(null);
+
+  const virtualizer = useVirtualizer({
+    count: items.length,
+    getScrollElement: () => parentRef.current,
+    estimateSize: () => 50,
+  });
+
+  return (
+    <div ref={parentRef} style={{ height: '400px', overflow: 'auto' }}>
+      <div style={{ height: virtualizer.getTotalSize() }}>
+        {virtualizer.getVirtualItems().map((virtualItem) => (
+          <div
+            key={virtualItem.key}
+            style={{
+              position: 'absolute',
+              top: virtualItem.start,
+              height: virtualItem.size,
+            }}
+          >
+            {items[virtualItem.index]}
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
 ```
 
-## 过渡
+## Transitions
 
-- **永远不要** `transition: all`（意外动画+性能问题）
-- 指定确切属性：`transition: transform 200ms ease-out`
+### Avoid `transition: all`
 
-## 主题切换
+Never use `transition: all`. It causes accidental animations and performance issues:
 
-- 切换主题时禁用过渡，绘制后重新启用
+```css
+/* Bad */
+.button {
+  transition: all 200ms ease;
+}
 
-## 布局性能
+/* Good - specify exact properties */
+.button {
+  transition: background-color 200ms ease, transform 200ms ease;
+}
+```
 
-- 硬编码尺寸（图片、骨架屏、异步内容）
-- `font-variant-numeric: tabular-nums` 处理动态数字
-- 不要 hover 时改字重
+### Theme Switching
 
-## React 性能
+Switching themes should not trigger transitions. Disable transitions during theme changes:
 
-- 动画在渲染周期外（refs 直接更新样式）
-- Framer Motion 用 transform 字符串（硬件加速）：
-  ```jsx
-  // ✅ 硬件加速
-  <motion.div animate={{ transform: "translateX(100px)" }} />
-  // ❌ 每帧重渲染
-  <motion.div animate={{ x: 100 }} />
-  ```
+```js
+function setTheme(theme) {
+  // Disable transitions
+  document.documentElement.classList.add('no-transitions');
 
-## CSS 性能
+  // Apply theme
+  document.documentElement.setAttribute('data-theme', theme);
 
-- 避免深层组件树动画 CSS 变量
-- blur() > 20px 昂贵（Safari 特别慢）
+  // Re-enable transitions after paint
+  requestAnimationFrame(() => {
+    requestAnimationFrame(() => {
+      document.documentElement.classList.remove('no-transitions');
+    });
+  });
+}
+```
 
-## 加载优化
+```css
+.no-transitions,
+.no-transitions * {
+  transition: none !important;
+}
+```
 
-- 预加载字体和首屏图像
-- 静态生成博客/文档/变更日志
-- 虚拟化大列表
-- `IntersectionObserver` 暂停离屏操作
+## Layout Performance
+
+### Prevent Layout Shift
+
+Dynamic elements should cause no layout shift:
+
+- Use hardcoded dimensions for images and videos
+- Reserve space for async content with skeletons
+- Use `font-variant-numeric: tabular-nums` for changing numbers
+- Don't change font weight on hover
+
+### Font Loading
+
+Preload fonts to prevent layout shift:
+
+```jsx
+import { preload } from 'react-dom';
+
+preload('/fonts/inter-var.woff2', {
+  as: 'font',
+  type: 'font/woff2',
+  crossOrigin: 'anonymous',
+});
+```
+
+## React Performance
+
+### Minimize Re-renders
+
+For animations, animate outside React's render cycle when possible:
+
+```jsx
+// Bad - causes re-render on every frame
+const [position, setPosition] = useState(0);
+
+// Good - use refs for direct DOM manipulation
+const elementRef = useRef(null);
+
+useEffect(() => {
+  let frame;
+  function animate() {
+    elementRef.current.style.transform = `translateX(${position}px)`;
+    frame = requestAnimationFrame(animate);
+  }
+  frame = requestAnimationFrame(animate);
+  return () => cancelAnimationFrame(frame);
+}, []);
+```
+
+### Framer Motion Performance
+
+```jsx
+// Hardware accelerated (uses transform string)
+<motion.div animate={{ transform: "translateX(100px)" }} />
+
+// NOT hardware accelerated (more readable but slower)
+<motion.div animate={{ x: 100 }} />
+```
+
+## CSS Performance
+
+### CSS Variables
+
+Avoid animating CSS variables in deep component trees. Each variable change triggers style recalculation for all descendants.
+
+### Blur Filters
+
+`blur()` filters above 20px are expensive, especially in Safari. Keep blur values subtle or avoid them on frequently-animating elements.
+
+## Static Generation
+
+Generate static content at build time:
+
+```jsx
+// Next.js example
+export async function getStaticProps() {
+  const posts = await fetchPosts();
+  return {
+    props: { posts },
+    revalidate: 3600, // Revalidate hourly
+  };
+}
+```
+
+Don't fetch blog posts, changelog entries, or docs at request time when they can be pre-generated.
+
+## Preloading
+
+### Critical Images
+
+Preload above-the-fold images:
+
+```html
+<link rel="preload" as="image" href="/hero.webp" />
+```
+
+### Fonts
+
+```html
+<link
+  rel="preload"
+  href="/fonts/inter.woff2"
+  as="font"
+  type="font/woff2"
+  crossorigin
+/>
+```
+
+## Off-Screen Content
+
+Pause or stop resource-intensive operations when off-screen:
+
+```js
+const observer = new IntersectionObserver((entries) => {
+  entries.forEach((entry) => {
+    if (entry.isIntersecting) {
+      startAnimation();
+    } else {
+      pauseAnimation();
+    }
+  });
+});
+
+observer.observe(element);
+```

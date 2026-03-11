@@ -4,6 +4,73 @@
 
 ---
 
+## 〇、UI 图标 — Iconoir（网页开发默认）
+
+**网页/Web 应用中的 UI 图标首选库。** 1671 个免费开源 SVG 线性图标。
+
+### 地址
+- 官网：https://iconoir.com/
+- GitHub：https://github.com/iconoir-icons/iconoir
+- CDN：`https://cdn.jsdelivr.net/gh/iconoir-icons/iconoir/icons/`
+
+### 使用方式
+
+**SVG 内联（推荐，最轻量）：**
+```html
+<!-- 从 iconoir.com 复制 SVG 代码直接内联 -->
+<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+  <!-- path data -->
+</svg>
+```
+
+**React 组件：**
+```bash
+npm install iconoir-react
+```
+```jsx
+import { Search, Settings, Mail } from 'iconoir-react';
+<Search width={20} height={20} />
+```
+
+**CSS/Font（无框架场景）：**
+```html
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/iconoir-icons/iconoir/css/iconoir.css">
+<i class="iconoir-search"></i>
+```
+
+### 样式规范
+- 默认尺寸：24×24
+- 线宽：1.5px（与 UI 文字协调）
+- 颜色跟随 `currentColor`，自动继承父元素文字色
+
+### 优先级
+**Iconoir > Heroicons > Lucide > 其他。** 除非项目已有其他图标库，否则默认用 Iconoir。
+
+---
+
+## 〇.五、3D 插画图标 — Thiings.co
+
+**大尺寸装饰图标：** 飞书群头像、网站空状态图、功能模块封面。
+
+### 地址
+- 官网：https://www.thiings.co/things
+- 图片源（Vercel Blob Storage）：`https://lftz25oez4aqbxpq.public.blob.vercel-storage.com/`
+
+### 使用方式
+1. 在官网搜索关键词
+2. 从页面提取 blob URL（不要用 `_next/image` 压缩版）
+3. 直接下载原始 PNG（1024×1024，透明背景）
+
+### 适用场景
+| 场景 | 推荐 |
+|------|------|
+| 飞书群头像 | ✅ Thiings.co |
+| 网站空状态插画 | ✅ Thiings.co |
+| 按钮/导航小图标 | ❌ 用 Iconoir |
+| 功能模块封面 | ✅ Thiings.co |
+
+---
+
 ## 一、品牌/模型 Logo — LobeHub Icons
 
 AI 模型、云服务等品牌 Logo 的统一图标库。

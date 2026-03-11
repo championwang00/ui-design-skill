@@ -1,74 +1,303 @@
-# UI 抛光指南
+# UI Polish
 
-## 排版
+Typography, visual design, layout, and visual refinements.
 
-### 字体渲染
-- 始终：`-webkit-font-smoothing: antialiased`
+## Typography
 
-### 防止布局偏移
-- **字体粗细**：永远不要在 hover/选中时改变字重，用颜色区分
-- **表格数字**：`font-variant-numeric: tabular-nums`（计数器、价格、计时器）
-- **文本换行**：标题用 `text-wrap: balance`
+### Font Rendering
 
-### 字母间距
-- 大文本 → 紧字母间距
-- 小文本 → 松字母间距
+Always apply antialiased font smoothing:
 
-### 排版字符
-- `…` 非 `...`（省略号）
-- `'` 非 `'`（卷曲撇号）
-- `"` `"` 非 `"`（卷曲引号）
-
-## 视觉设计
-
-### 阴影代替边框
 ```css
-box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.08);
-```
-比普通 border 更好地融入背景。
-
-### 细线边框
-Retina 用 0.5px：
-```css
---border-width: 1px;
-@media (-webkit-min-device-pixel-ratio: 2) {
-  --border-width: 0.5px;
+body {
+  -webkit-font-smoothing: antialiased;
 }
 ```
 
-### 渐变
-- 用缓动渐变替代线性渐变（更平滑无条带）
-- 淡入淡出优先用 `mask-image` 而非渐变
-- **不要**在可滚动内容上加淡入淡出
+### Font Subsetting
 
-### 滚动条
-- 不要替换页面滚动条
-- 只在小元素（代码片段）中自定义
+Subset fonts based on content, alphabet, or relevant language(s) to minimize file size. Only include the characters you actually use.
 
-### 焦点轮廓
-- 不改默认轮廓颜色（灰/黑/白以外的颜色会冲突）
+### Preventing Layout Shift
 
-## 布局
+**Font weight:** Never change font weight on hover or selected states. This causes layout shift.
+
+```css
+/* Bad - causes layout shift */
+.tab:hover {
+  font-weight: 600;
+}
+.tab.selected {
+  font-weight: 600;
+}
+
+/* Good - consistent weight */
+.tab {
+  font-weight: 500;
+}
+.tab.selected {
+  color: var(--color-primary);
+}
+```
+
+**Tabular numbers:** Use `font-variant-numeric: tabular-nums` for numbers that change dynamically (counters, prices, timers).
+
+```css
+.counter {
+  font-variant-numeric: tabular-nums;
+}
+```
+
+### Font Weight Variables
+
+Define font weights as CSS variables so you can adjust them globally
+
+```css
+:root {
+  --font-weight-normal: 400;
+  --font-weight-medium: 500;
+  --font-weight-semibold: 600;
+  --font-weight-bold: 700;
+}
+```
+
+### Text Wrapping
+
+Use `text-wrap: balance` on headings for better line breaks.
+
+```css
+h1,
+h2,
+h3 {
+  text-wrap: balance;
+}
+```
+
+### Letter Spacing by Size
+
+Larger text needs tighter letter spacing; smaller text needs looser spacing. Use a Text component to pair font sizes with their optimal letter spacing:
+
+```tsx
+// Letter spacing is handled inside the Text component
+
+<Text size="lg">Heading</Text>
+```
+
+Keep in mind that this is font dependent.
+
+## Typography Characters
+
+Use proper typographic characters:
+
+| Instead of | Use                    |
+| ---------- | ---------------------- |
+| `...`      | `…` (ellipsis)         |
+| `'`        | `'` (curly apostrophe) |
+| `"`        | `"` (curly quotes)     |
+
+## Visual Design
+
+### Shadows for Borders
+
+Use shadows instead of normal borders for better blending with backgrounds:
+
+```css
+/* Instead of border: 1px solid rgba(0, 0, 0, 0.08) */
+box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.08);
+```
+
+This blends better with varying background colors and avoids the harsh border look.
+
+### Hairline Borders
+
+Use 0.5px borders on retina displays for crisp, subtle dividers. Define a CSS variable that adapts to screen density:
+
+```css
+:root {
+  --border-hairline: 1px;
+
+  @media only screen and (min-device-pixel-ratio: 2),
+    only screen and (min-resolution: 192dpi) {
+    --border-hairline: 0.5px;
+  }
+}
+
+.divider {
+  border-bottom: var(--border-hairline) solid var(--gray-6);
+}
+```
+
+This gives you sharp 0.5px lines on retina screens while falling back to 1px on standard displays. Works for borders, dividers, and any fine UI details.
+
+### Gradients
+
+**Eased gradients:** Use eased gradients over linear gradients when using solid colors. Linear gradients have visible banding; eased gradients are smoother.
+
+Tool: https://larsenwork.com/easing-gradients/
+
+**Mask over gradient:** Prefer `mask-image` over gradients for fades. Masks work better with varying content.
+
+```css
+.fade-bottom {
+  mask-image: linear-gradient(to bottom, black 80%, transparent);
+}
+```
+
+### Scrollable Content
+
+Do not apply fade on scrollable lists or scrollable components. The fade restricts the viewable area and cuts off content.
+
+### Scrollbars
+
+Do not replace page scrollbars with custom ones. Only customize scrollbars in smaller elements like code snippets:
+
+```css
+.code-block::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+.code-block::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 4px;
+}
+```
+
+### Focus Outlines
+
+Do not change the default outline color to anything other than grey, black, or white. Custom colored outlines often clash with the interface.
+
+## Layout
+
+### Preventing Layout Shift
+
+Dynamic elements should cause no layout shift. Use hardcoded dimensions for:
+
+- Skeleton loaders
+- Image placeholders
+- Dynamic content areas
 
 ### Z-Index
-- 用固定比例，不要 `z-index: 9999`
-- 用 `isolation: isolate` 创建堆叠上下文
 
-### 安全区域
+Use a fixed z-index scale. Avoid arbitrary values like `z-index: 9999`.
+
 ```css
-padding-bottom: env(safe-area-inset-bottom);
+:root {
+  --z-dropdown: 100;
+  --z-modal: 200;
+  --z-tooltip: 300;
+  --z-toast: 400;
+}
 ```
 
-### 滚动边距
+**Better approach:** Avoid z-index entirely when possible. Use `isolation: isolate` or `position: relative` to create new stacking contexts.
+
 ```css
-scroll-margin-top: 80px; /* 锚点链接留空间 */
+.card {
+  isolation: isolate;
+}
 ```
 
-### 网格文本截断
-- 用 `line-clamp` 截断
+### Safe Areas
 
-## 深色模式
+Account for device safe areas (notches, home indicators) with the `env()` function:
 
-- 用数值比例 CSS 变量，不用 Tailwind `dark:` 手动调
-- 装饰元素禁用 `pointer-events`
-- 刷新不应闪烁（用 localStorage 存主题状态）
+```css
+.footer {
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+.sidebar {
+  padding-left: env(safe-area-inset-left);
+}
+```
+
+### Scroll Margins
+
+Set `scroll-margin-top` for scrollable elements to ensure proper space above elements when scrolling to anchors:
+
+```css
+[id] {
+  scroll-margin-top: 80px; /* Height of sticky header */
+}
+```
+
+### Grid Text Truncation
+
+When using grids, ensure text within cells is truncated when needed using `line-clamp`:
+
+```css
+.grid-cell-text {
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+```
+
+## Dark Mode
+
+### Theme Variables
+
+Use a numerical scale for color variables so you can easily switch between light and dark themes by replacing variables:
+
+```css
+:root {
+  --gray-1: #fafafa;
+  --gray-2: #f5f5f5;
+  --gray-12: #171717;
+}
+
+[data-theme="dark"] {
+  --gray-1: #171717;
+  --gray-2: #1f1f1f;
+  --gray-12: #fafafa;
+}
+```
+
+### Tailwind Dark Mode
+
+Do not use Tailwind's `dark:` modifier to adjust colors manually. Use CSS variables and flip them instead. This keeps the code cleaner and more maintainable.
+
+```css
+/* Good - variables flip automatically */
+.button {
+  background: var(--gray-12);
+  color: var(--gray-1);
+}
+
+/* Avoid - manual dark mode overrides everywhere */
+.button {
+  @apply bg-gray-900 dark:bg-gray-100;
+}
+```
+
+## Decorative Elements
+
+### Pointer Events
+
+Decorative elements should disable `pointer-events` to not hijack events from interactive elements beneath them:
+
+```css
+.decorative-bg {
+  pointer-events: none;
+}
+```
+
+### Code Illustrations
+
+Illustrations made in code should have disabled text selection:
+
+```css
+.illustration {
+  user-select: none;
+}
+```
+
+## Refresh Behavior
+
+Refresh should cause no flash of content in interactive components. Ensure initial state stays consistent by:
+
+- Storing state in localStorage/sessionStorage
+- Using proper SSR hydration
+- Setting initial state before render
